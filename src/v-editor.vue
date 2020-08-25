@@ -206,10 +206,18 @@ export default {
 
 <style src="github-markdown-css/github-markdown.css"></style>
 <style lang="less" scoped>
-.v-editor::v-deep .markdown-body hr {
-  background-color: #e8e8e8;
-  height: 2px;
-  margin: 13px 0;
+.v-editor::v-deep {
+  .markdown-body {
+    hr {
+      background-color: #e8e8e8;
+      height: 2px;
+      margin: 13px 0;
+    }
+
+    p {
+      margin-bottom: 0;
+    }
+  }
 }
 </style>
 <style lang="less">
