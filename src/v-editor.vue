@@ -1,6 +1,7 @@
 <template>
   <div class="v-editor">
     <ckeditor
+      ref="ckeditor"
       :editor="ClassicEditor"
       :value="value"
       :disabled="disabled"
@@ -44,6 +45,9 @@ import fullScreenExitIcon from './assets/fullscreenexit.vue'
 import ImagePreview from './plugin/ImagePreview'
 import './translations'
 
+const ROW_HEIGHT = 24
+const INNER_PADDING = 16
+
 export default {
   name: 'VEditor',
   components: {
@@ -62,7 +66,9 @@ export default {
       default: ''
     },
     /**
+     * @deprecated
      * 编辑区高度（不包括 toolbar），支持数字类型（默认单位 px）和 css 长度字符串
+     * 如果设置了 autosize，该选项将失效
      */
     height: {
       type: [Number, String],
@@ -109,6 +115,13 @@ export default {
       default() {
         alert('上传失败，请重试')
       }
+    },
+    /**
+     * 自适应内容高度，传入对象，如，{ minRows: 2, maxRows: 6 }
+     */
+    autosize: {
+      type: Object,
+      default: () => ({})
     }
   },
   data() {
@@ -148,22 +161,60 @@ export default {
         },
         this.editorOptions
       )
+    },
+    autosizeIsEmpty() {
+      return !Object.keys(this.autosize).length
     }
   },
   watch: {
-    height: 'setHeight'
+    height: 'setHeight',
+    autosize: {
+      handler: 'resizeHeight',
+      deep: true
+    }
   },
   methods: {
+    resizeHeight() {
+      if (this.autosizeIsEmpty || !this.editor) {
+        return
+      }
+      const {minRows, maxRows} = this.autosize
+      const {element} = this.editor.ui.view
+      const main = element.querySelector('.ck-editor__main')
+      const content = element.querySelector('.ck-content')
+      const result = {}
+      const minHeight = ROW_HEIGHT * minRows + INNER_PADDING
+      const maxHeight = ROW_HEIGHT * maxRows + INNER_PADDING
+      content.style.minHeight = `${minHeight}px`
+      const resize = () => {
+        this.$nextTick(() => {
+          let height = content.scrollHeight
+          if (height <= minHeight) {
+            result.height = `${minHeight}px`
+          }
+          if (height > minHeight && height < maxHeight) {
+            result.height = ''
+          }
+          if (height >= maxHeight) {
+            result.height = `${maxHeight}px`
+          }
+          content.style.minHeight = `${minHeight}px`
+          main.style.height = result.height
+        })
+      }
+      resize()
+      this.editor.model.document.on('change:data', resize)
+    },
     imagePreview(url) {
       this.previewImageUrl = url
     },
     setHeight() {
-      if (!this.height || !this.editor) return
+      if (!this.height || !this.editor || !this.autosizeIsEmpty) return
       let {height} = this
       if (!isNaN(+height)) height += 'px'
       const {element} = this.editor.ui.view
-      const content = element.querySelector('.ck-editor__main')
-      content.style.height = height
+      const main = element.querySelector('.ck-editor__main')
+      main.style.height = height
     },
     onInput(content) {
       this.$emit('input', content)
@@ -172,6 +223,7 @@ export default {
       this.editor = editor
       editor.ui.view.element.classList.add('markdown-body')
       this.setHeight()
+      this.resizeHeight()
     },
     uploadFile(file) {
       const uploadToAli = this.$refs.uploadToAli
