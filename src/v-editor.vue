@@ -221,6 +221,11 @@ export default {
 }
 </style>
 <style lang="less">
+// 修复 v-editor 处于 dialog 中无法显示 image toolbar（处于body上） 的问题
+.ck.ck-balloon-panel {
+  z-index: 3000;
+}
+
 .v-editor {
   position: relative;
   min-width: 400px;
