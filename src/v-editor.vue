@@ -130,13 +130,6 @@ export default {
     disableAutosave: {
       type: Boolean,
       default: false
-    },
-    /**
-     * 上传中的状态，支持 .sync
-     */
-    uploading: {
-      type: Boolean,
-      default: false
     }
   },
   data() {
@@ -253,7 +246,6 @@ export default {
      */
     async uploadFile(file, fileMIMEType) {
       this.uploaderAccept = fileMIMEType
-      this.$emit('update:uploading', true)
       this.$emit('upload-start')
       // 模拟 upload-to-ali 的 upload传参
       try {
@@ -271,8 +263,6 @@ export default {
       } catch (e) {
         this.$emit('upload-end', false, e)
         this.onUploadFail(false, e)
-      } finally {
-        this.$emit('update:uploading', false)
       }
     },
     toggleFullScreen() {
