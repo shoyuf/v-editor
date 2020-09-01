@@ -35,7 +35,6 @@ import UploadToAli from '@femessage/upload-to-ali'
 import ImgPreview from '@femessage/img-preview'
 
 import defaultEditorOptions from './defaultEditorOptions'
-import debounce from 'lodash-es/debounce'
 import ImageUploader from './plugin/ImageUploader'
 import CKEditor from '@ckeditor/ckeditor5-vue'
 
@@ -122,6 +121,13 @@ export default {
     autosize: {
       type: Object,
       default: () => ({})
+    },
+    /**
+     * 关闭 autosave 功能，详见文档[Getting and saving data - CKEditor 5 Documentation](https://ckeditor.com/docs/ckeditor5/latest/builds/guides/integration/saving-data.html#autosave-feature)
+     */
+    disableAutosave: {
+      type: Boolean,
+      default: false
     }
   },
   data() {
@@ -145,18 +151,23 @@ export default {
             ImageUploader(uploadImg),
             ImagePreview(this.imagePreview)
           ],
-          autosave: {
-            save: debounce(editor => {
-              /**
-               * 建议自动保存事件，当 8 秒内未触发 input 事件时触发；
-               * 另外，v-editor 还支持 focus、blur 等 ckeditor-vue 事件；
-               * 见[文档](https://ckeditor.com/docs/ckeditor5/latest/builds/guides/integration/frameworks/vuejs.html#component-events)
-               *
-               * @property {string} data - 当前内容
-               */
-              this.$emit('autosave', editor.getData())
-            }, 8000)
-          },
+          ...(this.disableAutosave
+            ? {}
+            : {
+                autosave: {
+                  waitingTime: 8000,
+                  save: editor => {
+                    /**
+                     * 建议自动保存事件，当 8 秒内未触发 input 事件时触发；
+                     * 另外，v-editor 还支持 focus、blur 等 ckeditor-vue 事件；
+                     * 见[文档](https://ckeditor.com/docs/ckeditor5/latest/builds/guides/integration/frameworks/vuejs.html#component-events)
+                     *
+                     * @property {string} data - 当前内容
+                     */
+                    this.$emit('autosave', editor.getData())
+                  }
+                }
+              }),
           language: 'zh-cn'
         },
         this.editorOptions
