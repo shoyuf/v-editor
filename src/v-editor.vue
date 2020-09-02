@@ -142,7 +142,7 @@ export default {
       ClassicEditor,
       isFullScreen: false,
       previewImageUrl: '',
-      uploaderAccept: 'image/*'
+      uploaderAccept: '*/*'
     }
   },
   computed: {
@@ -252,10 +252,8 @@ export default {
     },
     /**
      * @param {File} file 选择的文件
-     * @param {string} fileMIMEType 文件 MIME-Type
      */
-    async uploadFile(file, fileMIMEType) {
-      this.uploaderAccept = fileMIMEType
+    async uploadFile(file) {
       this.$emit('upload-start')
       // 模拟 upload-to-ali 的 upload传参
       try {
